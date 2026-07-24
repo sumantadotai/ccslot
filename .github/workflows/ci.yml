@@ -7,6 +7,9 @@ on:
 
 jobs:
   test:
+    # The bot's version PR only bumps package.json/CHANGELOG and its runs sit in
+    # "action_required" forever; push-to-main CI covers that commit anyway.
+    if: github.head_ref != 'changeset-release/main'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
