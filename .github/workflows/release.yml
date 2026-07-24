@@ -29,7 +29,13 @@ jobs:
       # changesets crashes instead of printing npm's E403, so check the token first:
       # this prints the account the token belongs to, or fails with the real reason.
       - name: Check the npm token
-        run: npm whoami
+        run: |
+          npm whoami
+          # What the token is actually allowed to write. A granular token limited to
+          # "select packages" cannot create a new one — that is an E403 with no summary,
+          # which is exactly the error changesets crashes on.
+          npm access list packages || true
+          npm profile get || true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
