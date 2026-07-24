@@ -8,6 +8,8 @@ import {
   exists,
   launchSpec,
   exportLine,
+  evalHint,
+  detectShell,
   loadConfig,
   shellRc,
   UserError,
@@ -23,8 +25,10 @@ const USAGE = `ccslot — multiple Claude Code accounts on one machine
 
   ccslot <name> [args...]    launch Claude Code as that slot
   ccslot run <name> [args…]  same, explicit — use when a slot shares a name with a command
-  ccslot use <name>          switch the CURRENT shell — needs eval:
-                               eval "$(ccslot use work)"
+  ccslot use <name>          switch the CURRENT shell — needs eval, run it bare to see how
+
+Shell for \`use\` is detected from $SHELL; force it with
+  --shell zsh|bash|fish|powershell|cmd
 
 Options (add / delete only)
   --share a,b,c   override shared paths for this run (default: ${DEFAULT_SHARE.join(',')})
@@ -47,7 +51,11 @@ function fail(msg) {
 
 function launch(name, args) {
   const spec = launchSpec(name, args)
-  const child = spawn(spec.command, spec.args, { stdio: 'inherit', env: spec.env })
+  const child = spawn(spec.command, spec.args, {
+    stdio: 'inherit',
+    env: spec.env,
+    shell: spec.shell,
+  })
   child.on('error', (e) =>
     fail(
       e.code === 'ENOENT'
@@ -93,7 +101,10 @@ async function runCommand(cmd, rest) {
     else if (a === '--share') flags.share = rest[++i]?.split(',').map((s) => s.trim()).filter(Boolean)
     else if (a === '--prefix') flags.prefix = rest[++i]
     else if (a === '--rc') flags.rc = rest[++i]
-    else if (a === '--fish') flags.fish = true
+    else if (a === '--shell') flags.shell = rest[++i]
+    else if (a === '--fish') flags.shell = 'fish'
+    else if (a === '--powershell') flags.shell = 'powershell'
+    else if (a === '--cmd') flags.shell = 'cmd'
     else if (a.startsWith('-')) fail(`unknown option: ${a}`)
     else positional.push(a)
   }
@@ -108,12 +119,14 @@ async function runCommand(cmd, rest) {
         writeAlias: !flags.noAlias,
       })
       console.log(`created ${r.dir}`)
-      for (const l of r.linked) console.log(`  shared  ${l}`)
+      for (const l of r.linked) {
+        console.log(`  shared  ${l.name}${l.kind === 'symlink' ? '' : ` (${l.kind})`}`)
+      }
       for (const m of r.missing) console.log(`  skipped ${m} (not present in ~/.claude)`)
       if (r.aliasAdded) console.log(`alias ${r.alias} added to ${r.rc}`)
-      else if (!flags.noAlias) console.log(`alias ${r.alias} already in ${r.rc}`)
+      else if (!flags.noAlias && r.rc) console.log(`alias ${r.alias} already in ${r.rc}`)
       console.log(`\nnext: ccslot ${name}`)
-      console.log(`or:   source ${r.rc} && ${r.alias}`)
+      if (r.rc) console.log(`or:   source ${r.rc} && ${r.alias}`)
       break
     }
     case 'list': {
@@ -137,22 +150,24 @@ async function runCommand(cmd, rest) {
       const s = view(name)
       console.log(`${s.name}\n  dir    ${s.dir}\n  alias  ${s.alias}\n  env    ${s.env}`)
       console.log('  shared:')
-      for (const x of s.shared) console.log(`    ${x.broken ? 'BROKEN ' : ''}${x.name} -> ${x.target}`)
+      for (const x of s.shared) {
+        console.log(`    ${x.broken ? 'BROKEN ' : ''}${x.name} -> ${x.target}${x.kind === 'symlink' ? '' : ` (${x.kind})`}`)
+      }
       console.log('  own:')
       for (const x of s.own) console.log(`    ${x}`)
       break
     }
     case 'use': {
-      if (!name) fail('usage: eval "$(ccslot use <name>)"')
-      const fish = flags.fish || (process.env.SHELL ?? '').includes('fish')
-      const line = exportLine(name, { fish })
+      const shell = flags.shell ?? detectShell()
+      if (!name) fail(`usage: ${evalHint('<name>', shell)}`)
+      const line = exportLine(name, { shell })
       // Piped into eval, stdout is not a TTY — emit the line. Interactively it would
       // do nothing, so show how to actually run it instead.
       if (process.stdout.isTTY) {
-        console.log(`# a child process cannot change your shell, so this needs eval:\n`)
-        console.log(`  eval "$(ccslot use ${name})"\n`)
+        console.log(`# a child process cannot change its parent shell, so this needs eval:\n`)
+        console.log(`  ${evalHint(name, shell)}\n`)
         console.log(`# or just launch directly:\n\n  ccslot ${name}\n`)
-        console.log(`# the line eval would run:\n\n  ${line}`)
+        console.log(`# the line eval would run (${shell}):\n\n  ${line}`)
       } else {
         console.log(line)
       }

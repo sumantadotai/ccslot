@@ -31,7 +31,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test test/*.test.js",
+    "test": "node --test test/core.test.js test/cli.test.js",
     "release": "changeset publish"
   },
   "devDependencies": {

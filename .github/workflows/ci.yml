@@ -12,9 +12,10 @@ jobs:
     if: github.head_ref != 'changeset-release/main'
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        node: [18, 20, 22]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [18, 20, 22, 24]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,4 +23,6 @@ jobs:
           node-version: ${{ matrix.node }}
       # ponytail: zero runtime deps, so no install step — this also lets the matrix
       # cover Node 18/20, which pnpm 11 itself refuses to run on.
-      - run: node --test test/*.test.js
+      # Explicit file list: cmd.exe does not glob, and --test's directory/glob
+      # handling differs across Node 18 and 24.
+      - run: node --test test/core.test.js test/cli.test.js
