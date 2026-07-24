@@ -194,12 +194,31 @@ The package exists so you don't get one path wrong at 11pm.
 
 ## Development
 
+TypeScript, strict, compiled with `tsc` to `dist/`. No bundler, still zero runtime deps.
+
 ```bash
 pnpm install        # installs the husky hooks too
-pnpm test           # vitest
-pnpm test:watch
+pnpm build          # tsc -> dist/
+pnpm test           # builds, then vitest
+pnpm typecheck      # tsc --noEmit over src + test
 pnpm test:coverage  # coverage/ — also posted to the CI job summary
 pnpm docs:dev       # the docs site
+```
+
+```
+src/
+  cli.ts          the ccslot binary — arg parsing, output, spawning claude
+  index.ts        public API, re-exports everything below
+  slots.ts        add / list / view / remove / launchSpec / exportLine
+  claude.ts       finding the claude CLI, install help, opening the docs
+  links.ts        symlink, with the Windows junction + hard-link fallbacks
+  shell.ts        shell detection, rc files, aliases, eval hints
+  paths.ts        ~/.claude, ~/.claude-<name>, ~/.ccslotrc.json
+  validate.ts     slot-name and shared-path rules
+  constants.ts    DEFAULT_SHARE, NEVER_SHARE, RESERVED
+  types.ts        shared types
+test/             vitest — core.test.ts (unit), cli.test.ts (spawns dist/cli.js)
+docs/             the docusaurus site
 ```
 
 CI runs the suite on Linux, macOS and Windows across Node 22 and 24, plus coverage and a

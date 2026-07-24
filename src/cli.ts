@@ -1,24 +1,12 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process'
-import {
-  add,
-  list,
-  view,
-  remove,
-  exists,
-  launchSpec,
-  exportLine,
-  evalHint,
-  detectShell,
-  loadConfig,
-  shellRc,
-  findClaude,
-  installHelp,
-  openSpec,
-  CLAUDE_DOCS,
-  UserError,
-  DEFAULT_SHARE,
-} from '../src/core.js'
+import { CLAUDE_DOCS, DEFAULT_SHARE } from './constants.js'
+import { UserError } from './errors.js'
+import { findClaude, installHelp, openSpec } from './claude.js'
+import { loadConfig } from './paths.js'
+import { detectShell, evalHint, shellRc } from './shell.js'
+import { add, exists, exportLine, launchSpec, list, remove, view } from './slots.js'
+import type { ShellName } from './types.js'
 
 const USAGE = `ccslot — multiple Claude Code accounts on one machine
 
@@ -49,13 +37,13 @@ Auth is never shared. On macOS it lives in the Keychain, keyed per config dir.`
 
 const argv = process.argv.slice(2)
 
-function fail(msg) {
+function fail(msg: string): never {
   console.error(`ccslot: ${msg}`)
   process.exit(1)
 }
 
 /** The one place that explains a missing Claude Code, so every path says the same thing. */
-function claudeMissingReport() {
+function claudeMissingReport(): string {
   const { docs, steps } = installHelp()
   const width = Math.max(...steps.map(([label]) => label.length))
   return [
@@ -72,7 +60,7 @@ function claudeMissingReport() {
   ].join('\n')
 }
 
-function launch(name, args) {
+function launch(name: string, args: string[]): void {
   const spec = launchSpec(name, args)
   // Fail before spawning: ENOENT from a shell (Windows) is not reliably distinguishable.
   if (!findClaude({ command: spec.command })) {
@@ -84,7 +72,7 @@ function launch(name, args) {
     env: spec.env,
     shell: spec.shell,
   })
-  child.on('error', (e) => {
+  child.on('error', (e: NodeJS.ErrnoException) => {
     if (e.code !== 'ENOENT') fail(e.message)
     console.error(claudeMissingReport())
     process.exit(127)
@@ -92,7 +80,16 @@ function launch(name, args) {
   child.on('exit', (code, signal) => process.exit(signal ? 1 : (code ?? 0)))
 }
 
-try {
+interface Flags {
+  noAlias?: boolean
+  yes?: boolean
+  share?: string[]
+  prefix?: string
+  rc?: string
+  shell?: ShellName
+}
+
+async function main(): Promise<void> {
   const cmd = argv[0]
 
   if (!cmd || cmd === '-h' || cmd === '--help' || cmd === 'help') {
@@ -112,16 +109,13 @@ try {
   } else {
     await runCommand(cmd, argv.slice(1))
   }
-} catch (e) {
-  if (e instanceof UserError) fail(e.message)
-  throw e
 }
 
-async function runCommand(cmd, rest) {
-  const flags = {}
-  const positional = []
+async function runCommand(cmd: string, rest: string[]): Promise<void> {
+  const flags: Flags = {}
+  const positional: string[] = []
   for (let i = 0; i < rest.length; i++) {
-    const a = rest[i]
+    const a = rest[i] as string
     if (a === '--no-alias') flags.noAlias = true
     else if (a === '-y' || a === '--yes') flags.yes = true
     else if (a === '--share')
@@ -131,14 +125,14 @@ async function runCommand(cmd, rest) {
         .filter(Boolean)
     else if (a === '--prefix') flags.prefix = rest[++i]
     else if (a === '--rc') flags.rc = rest[++i]
-    else if (a === '--shell') flags.shell = rest[++i]
+    else if (a === '--shell') flags.shell = rest[++i] as ShellName
     else if (a === '--fish') flags.shell = 'fish'
     else if (a === '--powershell') flags.shell = 'powershell'
     else if (a === '--cmd') flags.shell = 'cmd'
     else if (a.startsWith('-')) fail(`unknown option: ${a}`)
     else positional.push(a)
   }
-  const name = positional[0]
+  const name = positional[0] as string
 
   switch (cmd) {
     case 'add': {
@@ -167,7 +161,7 @@ async function runCommand(cmd, rest) {
         console.log('no slots yet — try: ccslot add work')
         break
       }
-      const current = process.env.CLAUDE_CONFIG_DIR
+      const current = process.env['CLAUDE_CONFIG_DIR']
       for (const s of slots) {
         const broken = s.shared.filter((x) => x.broken).length
         console.log(
@@ -184,7 +178,9 @@ async function runCommand(cmd, rest) {
       console.log('  shared:')
       for (const x of s.shared) {
         console.log(
-          `    ${x.broken ? 'BROKEN ' : ''}${x.name} -> ${x.target}${x.kind === 'symlink' ? '' : ` (${x.kind})`}`
+          `    ${x.broken ? 'BROKEN ' : ''}${x.name} -> ${x.target}${
+            x.kind === 'symlink' ? '' : ` (${x.kind})`
+          }`
         )
       }
       console.log('  own:')
@@ -251,7 +247,7 @@ async function runCommand(cmd, rest) {
   }
 }
 
-async function confirm(question, yes) {
+async function confirm(question: string, yes?: boolean): Promise<boolean> {
   if (yes) return true
   if (!process.stdin.isTTY) return false
   const rl = (await import('node:readline/promises')).createInterface({
@@ -261,4 +257,11 @@ async function confirm(question, yes) {
   const answer = await rl.question(`${question} [y/N] `)
   rl.close()
   return /^y(es)?$/i.test(answer.trim())
+}
+
+try {
+  await main()
+} catch (e) {
+  if (e instanceof UserError) fail(e.message)
+  throw e
 }

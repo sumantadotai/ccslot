@@ -19,7 +19,7 @@ import {
   installHelp,
   openSpec,
   UserError,
-} from '../src/core.js'
+} from '../src/index.js'
 
 const IS_WINDOWS = process.platform === 'win32'
 
@@ -84,7 +84,7 @@ test("view classifies a hard-linked file as shared, not as the slot's own", () =
   fs.linkSync(path.join(base, 'settings.json'), path.join(dir, 'settings.json'))
 
   const v = view('work', home)
-  expect(v.shared.find((s) => s.name === 'settings.json').kind).toBe('hardlink')
+  expect(v.shared.find((s) => s.name === 'settings.json')?.kind).toBe('hardlink')
   expect(v.own).not.toContain('settings.json')
 })
 
@@ -92,7 +92,7 @@ test('view flags broken links', () => {
   const { home, base, rc } = fakeHome()
   add('work', { home, rc })
   fs.rmSync(path.join(base, 'skills'), { recursive: true })
-  expect(view('work', home).shared.find((s) => s.name === 'skills').broken).toBe(true)
+  expect(view('work', home).shared.find((s) => s.name === 'skills')?.broken).toBe(true)
 })
 
 test('delete removes the slot and alias but NEVER the shared targets', () => {
@@ -156,7 +156,7 @@ test('launchSpec sets CLAUDE_CONFIG_DIR, inherits the env, and passes args throu
   expect(spec.shell).toBe(false)
   expect(spec.env.CLAUDE_CONFIG_DIR).toBe(dir)
   // Windows spells it Path, so compare through a case-insensitive lookup.
-  const pathKey = Object.keys(process.env).find((k) => k.toUpperCase() === 'PATH')
+  const pathKey = Object.keys(process.env).find((k) => k.toUpperCase() === 'PATH') ?? 'PATH'
   expect(spec.env[pathKey]).toBe(process.env[pathKey])
   expect(() => launchSpec('nope', [], { home })).toThrow(UserError)
 })
@@ -273,7 +273,7 @@ test('installHelp gives the right installer per platform and always the docs URL
     const h = installHelp(p)
     expect(h.docs).toBe('https://code.claude.com/docs/en/overview')
     expect(h.steps.some(([, cmd]) => cmd.includes('@anthropic-ai/claude-code'))).toBe(true)
-    expect(h.steps[0][1]).toMatch(p === 'win32' ? /install\.ps1/ : /install\.sh/)
+    expect(h.steps[0]?.[1]).toMatch(p === 'win32' ? /install\.ps1/ : /install\.sh/)
   }
 })
 

@@ -4,3 +4,4 @@ docs/.docusaurus
 pnpm-lock.yaml
 docs/pnpm-lock.yaml
 CHANGELOG.md
+dist

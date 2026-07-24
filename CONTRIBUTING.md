@@ -6,7 +6,9 @@ Small project, short rules.
 
 ```bash
 pnpm install        # installs husky hooks too
-pnpm test           # vitest, ~3s
+pnpm build          # tsc -> dist/
+pnpm test           # builds, then vitest (~3s)
+pnpm typecheck      # tsc --noEmit over src + test
 pnpm test:watch
 pnpm test:coverage  # writes coverage/ (also posted to the CI job summary)
 pnpm docs:dev       # the docs site at localhost:3000
@@ -18,6 +20,10 @@ them. `commit-msg` runs commitlint. CI re-checks formatting, so a bypassed hook 
 delays the news.
 
 Node 22+. Node 20 is end-of-life and CI does not test it.
+
+Source is TypeScript under `src/` (strict, `tsc` to `dist/`, no bundler). `src/cli.ts` is the
+binary; everything else is a small focused module re-exported from `src/index.ts`. The CLI
+tests spawn the compiled `dist/cli.js`, which is why `pnpm test` builds first.
 
 ## Reporting a bug
 
@@ -49,7 +55,7 @@ CI will just catch it later.
 
 - One change per PR.
 - Add a test. The suite is the reason this thing can claim to work on three platforms.
-- Run `pnpm changeset` for anything that changes `bin/` or `src/` — that is what versions
+- Run `pnpm changeset` for anything that changes `src/` — that is what versions
   and publishes the package. Docs- or CI-only PRs do not need one.
 - Never widen what gets shared between slots without a very good reason, and never touch
   `NEVER_SHARE`. Sharing auth defeats the entire point of the tool.

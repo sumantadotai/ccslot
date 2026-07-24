@@ -1,4 +1,5 @@
-// End-to-end tests: run the real bin against a fake HOME and a stub `claude` on PATH.
+// End-to-end tests: run the compiled bin (dist/cli.js — `pnpm test` builds first)
+// against a fake HOME and a stub `claude` on PATH.
 // These are the ones that catch platform problems the unit tests cannot — .cmd
 // resolution on Windows, exit-code forwarding, argument pass-through.
 import { test, expect } from 'vitest'
@@ -9,10 +10,10 @@ import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 
 const IS_WINDOWS = process.platform === 'win32'
-const BIN = fileURLToPath(new URL('../bin/ccslot.js', import.meta.url))
+const BIN = fileURLToPath(new URL('../dist/cli.js', import.meta.url))
 
 /** A stub `claude` that reports the config dir and args it saw, then exits 7. */
-function stubClaude(dir) {
+function stubClaude(dir: string): string {
   fs.mkdirSync(dir, { recursive: true })
   if (IS_WINDOWS) {
     fs.writeFileSync(
@@ -42,7 +43,7 @@ function sandbox() {
   // key rather than adding a second one that differs only in case.
   const pathKey = Object.keys(process.env).find((k) => k.toUpperCase() === 'PATH') ?? 'PATH'
 
-  const spawnWith = (dirs, args) =>
+  const spawnWith = (dirs: string, args: string[]) =>
     spawnSync(process.execPath, [BIN, ...args], {
       encoding: 'utf8',
       env: {
@@ -54,12 +55,12 @@ function sandbox() {
       },
     })
 
-  const run = (...args) => spawnWith(binDir + path.delimiter + process.env[pathKey], args)
+  const run = (...args: string[]) => spawnWith(binDir + path.delimiter + process.env[pathKey], args)
   // An empty PATH, not the real one — otherwise a dev with Claude Code installed
   // would never see the not-installed path this exercises.
-  const empty =
-    fs.mkdirSync(path.join(root, 'empty'), { recursive: true }) ?? path.join(root, 'empty')
-  const runWithoutClaude = (...args) => spawnWith(empty, args)
+  const empty = path.join(root, 'empty')
+  fs.mkdirSync(empty, { recursive: true })
+  const runWithoutClaude = (...args: string[]) => spawnWith(empty, args)
 
   return { root, home, base, run, runWithoutClaude }
 }

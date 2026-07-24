@@ -1,0 +1,10 @@
+/** Public API. The CLI in cli.ts is the only consumer that ships, but this is importable. */
+export * from './types.js'
+export * from './constants.js'
+export { UserError } from './errors.js'
+export { assertName, assertShare } from './validate.js'
+export { paths, loadConfig } from './paths.js'
+export { linkShared, isLink, isHardLinkOf } from './links.js'
+export { detectShell, shellRc, aliasLine, evalHint } from './shell.js'
+export { findClaude, installHelp, openSpec } from './claude.js'
+export { add, exists, list, view, launchSpec, exportLine, remove } from './slots.js'

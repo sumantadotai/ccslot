@@ -9,9 +9,9 @@
 ## Checklist
 
 - [ ] Commits follow [Conventional Commits](https://www.conventionalcommits.org) — `feat(cli): …`, `fix(core): …`
-- [ ] `pnpm test` passes
+- [ ] `pnpm test` and `pnpm typecheck` pass
 - [ ] A test covers the change (or it is docs/CI only)
-- [ ] `pnpm changeset` added — required for anything that ships in `bin/` or `src/`
+- [ ] `pnpm changeset` added — required for anything that ships in `src/`
 - [ ] Nothing new in `NEVER_SHARE` got shared, and no credentials are read or written
 
 ## Platforms checked
