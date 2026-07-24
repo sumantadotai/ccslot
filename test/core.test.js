@@ -166,7 +166,9 @@ test('launchSpec sets CLAUDE_CONFIG_DIR, inherits the env, and passes args throu
   assert.deepEqual(spec.args, ['--resume', '-p', 'hi'])
   assert.equal(spec.shell, false)
   assert.equal(spec.env.CLAUDE_CONFIG_DIR, dir)
-  assert.equal(spec.env.PATH, process.env.PATH)
+  // Windows spells it Path, so compare through a case-insensitive lookup.
+  const pathKey = Object.keys(process.env).find((k) => k.toUpperCase() === 'PATH')
+  assert.equal(spec.env[pathKey], process.env[pathKey])
   assert.throws(() => launchSpec('nope', [], { home }), UserError)
 })
 

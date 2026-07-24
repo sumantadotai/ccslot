@@ -39,6 +39,10 @@ function sandbox() {
   fs.writeFileSync(path.join(home, '.zshrc'), '')
   const binDir = stubClaude(path.join(root, 'bin'))
 
+  // Windows spells it Path; spreading process.env keeps that casing, so reuse the real
+  // key rather than adding a second one that differs only in case.
+  const pathKey = Object.keys(process.env).find((k) => k.toUpperCase() === 'PATH') ?? 'PATH'
+
   const run = (...args) =>
     spawnSync(process.execPath, [BIN, ...args], {
       encoding: 'utf8',
@@ -47,7 +51,7 @@ function sandbox() {
         HOME: home,
         USERPROFILE: home, // os.homedir() reads this on Windows
         SHELL: IS_WINDOWS ? '' : '/bin/zsh',
-        PATH: binDir + path.delimiter + process.env.PATH,
+        [pathKey]: binDir + path.delimiter + process.env[pathKey],
       },
     })
 
