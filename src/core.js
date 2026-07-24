@@ -22,6 +22,9 @@ export const NEVER_SHARE = new Set([
 
 const NAME_RE = /^[a-z0-9][a-z0-9._-]*$/i
 
+/** Subcommands shadow slot names in `ccslot <name>`, so a slot may not be called one. */
+export const RESERVED = new Set(['add', 'list', 'view', 'delete', 'rm', 'use', 'run', 'config', 'help'])
+
 export class UserError extends Error {}
 
 export function assertName(name) {
@@ -29,6 +32,9 @@ export function assertName(name) {
     throw new UserError(
       `invalid slot name ${JSON.stringify(name ?? '')} — use letters, digits, dot, dash, underscore`
     )
+  }
+  if (RESERVED.has(name)) {
+    throw new UserError(`"${name}" is a ccslot command — pick another slot name`)
   }
   return name
 }
@@ -202,6 +208,39 @@ export function view(name, home = os.homedir()) {
     shared: shared.sort((a, b) => a.name.localeCompare(b.name)),
     own: own.sort(),
   }
+}
+
+export function exists(name, home = os.homedir()) {
+  if (!NAME_RE.test(name ?? '') || RESERVED.has(name)) return false
+  try {
+    return fs.statSync(paths(home).slotDir(name)).isDirectory()
+  } catch {
+    return false
+  }
+}
+
+/**
+ * What `ccslot run <name> -- ...` should exec. Returned rather than spawned so it
+ * can be asserted on without launching a real Claude Code.
+ */
+export function launchSpec(name, args = [], { home = os.homedir(), command = 'claude' } = {}) {
+  assertName(name)
+  const dir = paths(home).slotDir(name)
+  if (!fs.existsSync(dir)) {
+    throw new UserError(`no such slot: ${name} — create it with \`ccslot add ${name}\``)
+  }
+  return { command, args, env: { ...process.env, CLAUDE_CONFIG_DIR: dir }, dir }
+}
+
+/** Shell-quoted export line for `eval "$(ccslot use work)"`. */
+export function exportLine(name, { home = os.homedir(), fish = false } = {}) {
+  assertName(name)
+  const dir = paths(home).slotDir(name)
+  if (!fs.existsSync(dir)) {
+    throw new UserError(`no such slot: ${name} — create it with \`ccslot add ${name}\``)
+  }
+  const quoted = `'${dir.replaceAll("'", `'\\''`)}'`
+  return fish ? `set -gx CLAUDE_CONFIG_DIR ${quoted}` : `export CLAUDE_CONFIG_DIR=${quoted}`
 }
 
 export function remove(name, { home = os.homedir(), rc, aliasPrefix } = {}) {

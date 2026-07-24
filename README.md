@@ -11,8 +11,7 @@ Two accounts means one seat two people are fighting over, so switching means
 
 ```bash
 npx ccslot add work
-source ~/.zshrc
-ccwork          # second account, same history, same skills
+ccslot work     # second account, same history, same skills
 claude          # original account, still logged in
 ```
 
@@ -22,11 +21,17 @@ because the conversation history lives in the shared `projects/`.
 ## Commands
 
 ```
-ccslot add <name>      create ~/.claude-<name>, symlink shared paths, add a shell alias
-ccslot list            list slots
-ccslot view <name>     show what a slot shares and what is its own
-ccslot delete <name>   remove the slot dir and its alias (shared targets untouched)
+ccslot add <name>          create ~/.claude-<name>, symlink shared paths, add a shell alias
+ccslot list                list slots (* marks the one active in this shell)
+ccslot view <name>         show what a slot shares and what is its own
+ccslot delete <name>       remove the slot dir and its alias (shared targets untouched)
+
+ccslot <name> [args…]      launch Claude Code as that slot
+ccslot run <name> [args…]  same, explicit form
+ccslot use <name>          switch the current shell (needs eval, see below)
 ```
+
+Options, `add` and `delete` only:
 
 ```
 --share a,b,c   override shared paths for this run
@@ -35,6 +40,25 @@ ccslot delete <name>   remove the slot dir and its alias (shared targets untouch
 --no-alias      skip writing the alias
 -y, --yes       delete without confirming
 ```
+
+## Three ways to run as a slot
+
+```bash
+ccslot work --resume     # launch it directly — everything after the name goes to claude
+ccwork --resume          # the alias `ccslot add` wrote to your rc file
+eval "$(ccslot use work)"   # switch this whole shell, then run claude/anything yourself
+```
+
+`ccslot work` is the everyday one. It spawns `claude` with `CLAUDE_CONFIG_DIR` set and
+forwards its exit code, so it composes fine in scripts.
+
+`use` needs the `eval` because a child process **cannot** change its parent shell's
+environment — no CLI can. Running `ccslot use work` bare just prints the line it would
+have run. Fish is detected from `$SHELL` (or force it with `--fish`).
+
+Slots can't be named `add`, `list`, `view`, `delete`, `rm`, `use`, `run`, `config` or
+`help` — commands win in `ccslot <name>`, so those names are refused at creation time.
+If you somehow have one already, `ccslot run <name>` reaches it.
 
 ## Config
 

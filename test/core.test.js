@@ -3,7 +3,8 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { add, list, view, remove, assertShare, UserError } from '../src/core.js'
+import { execFileSync } from 'node:child_process'
+import { add, list, view, remove, exists, launchSpec, exportLine, assertShare, UserError } from '../src/core.js'
 
 function fakeHome() {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'ccslot-'))
@@ -75,4 +76,55 @@ test('rejects bad slot names', () => {
   const { home, rc } = fakeHome()
   assert.throws(() => add('../evil', { home, rc }), UserError)
   assert.throws(() => add('', { home, rc }), UserError)
+})
+
+test('rejects slot names that shadow commands', () => {
+  const { home, rc } = fakeHome()
+  for (const n of ['list', 'add', 'use', 'run', 'delete']) {
+    assert.throws(() => add(n, { home, rc }), UserError, `expected ${n} to be reserved`)
+  }
+})
+
+test('exists() gates bare-name launch and never matches a command', () => {
+  const { home, rc } = fakeHome()
+  add('work', { home, rc })
+  assert.equal(exists('work', home), true)
+  assert.equal(exists('personal', home), false)
+  assert.equal(exists('list', home), false)
+  assert.equal(exists('../etc', home), false)
+})
+
+test('launchSpec points CLAUDE_CONFIG_DIR at the slot and passes args through', () => {
+  const { home, rc } = fakeHome()
+  const { dir } = add('work', { home, rc })
+  const spec = launchSpec('work', ['--resume', '-p', 'hi'], { home })
+
+  assert.equal(spec.command, 'claude')
+  assert.deepEqual(spec.args, ['--resume', '-p', 'hi'])
+  assert.equal(spec.env.CLAUDE_CONFIG_DIR, dir)
+  assert.equal(spec.env.PATH, process.env.PATH) // inherits the rest of the env
+  assert.throws(() => launchSpec('nope', [], { home }), UserError)
+})
+
+test('exportLine is eval-safe and shell-specific', () => {
+  const { home, rc } = fakeHome()
+  const { dir } = add('work', { home, rc })
+
+  assert.equal(exportLine('work', { home }), `export CLAUDE_CONFIG_DIR='${dir}'`)
+  assert.equal(exportLine('work', { home, fish: true }), `set -gx CLAUDE_CONFIG_DIR '${dir}'`)
+  assert.throws(() => exportLine('nope', { home }), UserError)
+})
+
+test('exportLine quotes a home directory containing a single quote', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), "ccslot-o'brien-"))
+  fs.mkdirSync(path.join(home, '.claude', 'projects'), { recursive: true })
+  const rc = path.join(home, '.zshrc')
+  const { dir } = add('work', { home, rc })
+
+  const line = exportLine('work', { home })
+  assert.match(line, /'\\''/) // the quote is escaped, not left to break the eval
+  const echoed = execFileSync('/bin/sh', ['-c', `${line}; printf %s "$CLAUDE_CONFIG_DIR"`], {
+    encoding: 'utf8',
+  })
+  assert.equal(echoed, dir)
 })
