@@ -1,8 +1,7 @@
 // End-to-end tests: run the real bin against a fake HOME and a stub `claude` on PATH.
 // These are the ones that catch platform problems the unit tests cannot — .cmd
 // resolution on Windows, exit-code forwarding, argument pass-through.
-import { test } from 'node:test'
-import assert from 'node:assert/strict'
+import { test, expect } from 'vitest'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -61,11 +60,12 @@ function sandbox() {
 test('add creates a slot and reports what it shared', () => {
   const { run, base } = sandbox()
   const r = run('add', 'work')
-  assert.equal(r.status, 0, r.stderr)
-  assert.match(r.stdout, /shared {2}projects/)
-  assert.match(r.stdout, /shared {2}settings\.json/)
-  assert.match(r.stdout, /next: ccslot work/)
-  assert.equal(fs.existsSync(path.join(base, 'projects')), true)
+
+  expect(r.status, r.stderr).toBe(0)
+  expect(r.stdout).toMatch(/shared {2}projects/)
+  expect(r.stdout).toMatch(/shared {2}settings\.json/)
+  expect(r.stdout).toMatch(/next: ccslot work/)
+  expect(fs.existsSync(path.join(base, 'projects'))).toBe(true)
 })
 
 test('bare slot name launches claude with CLAUDE_CONFIG_DIR and forwards the exit code', () => {
@@ -73,9 +73,9 @@ test('bare slot name launches claude with CLAUDE_CONFIG_DIR and forwards the exi
   run('add', 'work')
   const r = run('work')
 
-  assert.equal(r.status, 7, `expected the stub's exit code to propagate\n${r.stderr}`)
-  assert.match(r.stdout, /\[claude\] dir=/)
-  assert.match(r.stdout, new RegExp(escape(path.join(home, '.claude-work'))))
+  expect(r.status, `expected the stub's exit code to propagate\n${r.stderr}`).toBe(7)
+  expect(r.stdout).toMatch(/\[claude\] dir=/)
+  expect(r.stdout).toContain(path.join(home, '.claude-work'))
 })
 
 test('args after the slot name reach claude untouched', () => {
@@ -83,17 +83,18 @@ test('args after the slot name reach claude untouched', () => {
   run('add', 'personal')
   const r = run('personal', '--resume', '-p', 'hello')
 
-  assert.equal(r.status, 7)
-  assert.match(r.stdout, /args=.*--resume/)
-  assert.match(r.stdout, /-p hello/)
+  expect(r.status).toBe(7)
+  expect(r.stdout).toMatch(/args=.*--resume/)
+  expect(r.stdout).toMatch(/-p hello/)
 })
 
 test('run <name> -- <args> works the same', () => {
   const { run } = sandbox()
   run('add', 'work')
   const r = run('run', 'work', '--', '--resume')
-  assert.equal(r.status, 7)
-  assert.match(r.stdout, /args=.*--resume/)
+
+  expect(r.status).toBe(7)
+  expect(r.stdout).toMatch(/args=.*--resume/)
 })
 
 test('two slots launch with different config dirs', () => {
@@ -101,8 +102,8 @@ test('two slots launch with different config dirs', () => {
   run('add', 'work')
   run('add', 'personal')
 
-  assert.match(run('work').stdout, new RegExp(escape(path.join(home, '.claude-work'))))
-  assert.match(run('personal').stdout, new RegExp(escape(path.join(home, '.claude-personal'))))
+  expect(run('work').stdout).toContain(path.join(home, '.claude-work'))
+  expect(run('personal').stdout).toContain(path.join(home, '.claude-personal'))
 })
 
 test('list shows every slot, view shows its links', () => {
@@ -111,14 +112,14 @@ test('list shows every slot, view shows its links', () => {
   run('add', 'personal')
 
   const l = run('list')
-  assert.equal(l.status, 0, l.stderr)
-  assert.match(l.stdout, /personal/)
-  assert.match(l.stdout, /work/)
+  expect(l.status, l.stderr).toBe(0)
+  expect(l.stdout).toMatch(/personal/)
+  expect(l.stdout).toMatch(/work/)
 
   const v = run('view', 'work')
-  assert.equal(v.status, 0, v.stderr)
-  assert.match(v.stdout, /shared:/)
-  assert.match(v.stdout, /projects ->/)
+  expect(v.status, v.stderr).toBe(0)
+  expect(v.stdout).toMatch(/shared:/)
+  expect(v.stdout).toMatch(/projects ->/)
 })
 
 test('use prints a single eval-able line when piped', () => {
@@ -126,19 +127,20 @@ test('use prints a single eval-able line when piped', () => {
   run('add', 'work')
   const r = run('use', 'work')
 
-  assert.equal(r.status, 0, r.stderr)
+  expect(r.status, r.stderr).toBe(0)
   const lines = r.stdout.trim().split('\n')
-  assert.equal(lines.length, 1, `expected one line, got:\n${r.stdout}`)
-  assert.match(lines[0], IS_WINDOWS ? /CLAUDE_CONFIG_DIR/ : /^export CLAUDE_CONFIG_DIR=/)
-  assert.match(lines[0], new RegExp(escape(path.join(home, '.claude-work'))))
+  expect(lines, `expected one line, got:\n${r.stdout}`).toHaveLength(1)
+  expect(lines[0]).toMatch(IS_WINDOWS ? /CLAUDE_CONFIG_DIR/ : /^export CLAUDE_CONFIG_DIR=/)
+  expect(lines[0]).toContain(path.join(home, '.claude-work'))
 })
 
 test('use --shell emits the right syntax for each shell', () => {
   const { run } = sandbox()
   run('add', 'work')
-  assert.match(run('use', 'work', '--shell', 'fish').stdout, /^set -gx CLAUDE_CONFIG_DIR/)
-  assert.match(run('use', 'work', '--shell', 'powershell').stdout, /^\$env:CLAUDE_CONFIG_DIR = /)
-  assert.match(run('use', 'work', '--shell', 'cmd').stdout, /^set CLAUDE_CONFIG_DIR=/)
+
+  expect(run('use', 'work', '--shell', 'fish').stdout).toMatch(/^set -gx CLAUDE_CONFIG_DIR/)
+  expect(run('use', 'work', '--shell', 'powershell').stdout).toMatch(/^\$env:CLAUDE_CONFIG_DIR = /)
+  expect(run('use', 'work', '--shell', 'cmd').stdout).toMatch(/^set CLAUDE_CONFIG_DIR=/)
 })
 
 test('delete removes the slot but leaves the base config intact', () => {
@@ -147,40 +149,38 @@ test('delete removes the slot but leaves the base config intact', () => {
   fs.writeFileSync(path.join(base, 'projects', 'keep.jsonl'), 'precious')
 
   const r = run('delete', 'work', '-y')
-  assert.equal(r.status, 0, r.stderr)
-  assert.equal(fs.existsSync(path.join(home, '.claude-work')), false)
-  assert.equal(fs.readFileSync(path.join(base, 'projects', 'keep.jsonl'), 'utf8'), 'precious')
-  assert.equal(fs.existsSync(path.join(base, 'settings.json')), true)
-  assert.match(run('list').stdout, /no slots yet/)
+
+  expect(r.status, r.stderr).toBe(0)
+  expect(fs.existsSync(path.join(home, '.claude-work'))).toBe(false)
+  expect(fs.readFileSync(path.join(base, 'projects', 'keep.jsonl'), 'utf8')).toBe('precious')
+  expect(fs.existsSync(path.join(base, 'settings.json'))).toBe(true)
+  expect(run('list').stdout).toMatch(/no slots yet/)
 })
 
 test('errors exit non-zero with a usable message', () => {
   const { run } = sandbox()
 
   const unknown = run('nosuch')
-  assert.equal(unknown.status, 1)
-  assert.match(unknown.stderr, /unknown command or slot/)
+  expect(unknown.status).toBe(1)
+  expect(unknown.stderr).toMatch(/unknown command or slot/)
 
   const reserved = run('add', 'list')
-  assert.equal(reserved.status, 1)
-  assert.match(reserved.stderr, /is a ccslot command/)
+  expect(reserved.status).toBe(1)
+  expect(reserved.stderr).toMatch(/is a ccslot command/)
 
   const ghost = run('run', 'ghost')
-  assert.equal(ghost.status, 1)
-  assert.match(ghost.stderr, /no such slot/)
+  expect(ghost.status).toBe(1)
+  expect(ghost.stderr).toMatch(/no such slot/)
 
   const noArgs = run()
-  assert.equal(noArgs.status, 1)
-  assert.match(noArgs.stdout, /ccslot add <name>/)
+  expect(noArgs.status).toBe(1)
+  expect(noArgs.stdout).toMatch(/ccslot add <name>/)
 })
 
 test('--help exits zero', () => {
   const { run } = sandbox()
   const r = run('--help')
-  assert.equal(r.status, 0)
-  assert.match(r.stdout, /ccslot use <name>/)
-})
 
-function escape(s) {
-  return s.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
+  expect(r.status).toBe(0)
+  expect(r.stdout).toMatch(/ccslot use <name>/)
+})

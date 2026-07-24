@@ -15,14 +15,13 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        node: [18, 20, 22, 24]
+        node: [20, 22, 24]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-      # ponytail: zero runtime deps, so no install step — this also lets the matrix
-      # cover Node 18/20, which pnpm 11 itself refuses to run on.
-      # Explicit file list: cmd.exe does not glob, and --test's directory/glob
-      # handling differs across Node 18 and 24.
-      - run: node --test test/core.test.js test/cli.test.js
+      # npm, not pnpm: pnpm 11 refuses to run on Node < 22.13, which would cost us the
+      # Node 20 row. ccslot has no runtime deps, so this only installs vitest.
+      - run: npm install --no-audit --no-fund
+      - run: npm test

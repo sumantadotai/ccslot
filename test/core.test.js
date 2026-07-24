@@ -1,5 +1,4 @@
-import { test } from 'node:test'
-import assert from 'node:assert/strict'
+import { test, expect } from 'vitest'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -33,20 +32,16 @@ function fakeHome() {
 }
 
 test('add links shared paths, skips missing, writes alias once', () => {
-  const { home, base, rc } = fakeHome()
+  const { home, rc } = fakeHome()
   const r = add('work', { home, rc })
 
-  assert.deepEqual(
-    r.linked.map((l) => l.name),
-    ['projects', 'skills', 'settings.json']
-  )
-  assert.deepEqual(r.missing, ['plans']) // not present in base
-  assert.equal(r.aliasAdded, true)
-  assert.match(
-    fs.readFileSync(rc, 'utf8'),
+  expect(r.linked.map((l) => l.name)).toEqual(['projects', 'skills', 'settings.json'])
+  expect(r.missing).toEqual(['plans']) // not present in base
+  expect(r.aliasAdded).toBe(true)
+  expect(fs.readFileSync(rc, 'utf8')).toMatch(
     /alias ccwork='CLAUDE_CONFIG_DIR="\$HOME\/\.claude-work" claude'/
   )
-  assert.throws(() => add('work', { home, rc }), UserError) // refuses to clobber
+  expect(() => add('work', { home, rc })).toThrow(UserError) // refuses to clobber
 })
 
 test('shared paths really are shared storage, both directions', () => {
@@ -55,14 +50,14 @@ test('shared paths really are shared storage, both directions', () => {
 
   // slot -> base
   fs.writeFileSync(path.join(dir, 'projects', 'a.jsonl'), 'from-slot')
-  assert.equal(fs.readFileSync(path.join(base, 'projects', 'a.jsonl'), 'utf8'), 'from-slot')
+  expect(fs.readFileSync(path.join(base, 'projects', 'a.jsonl'), 'utf8')).toBe('from-slot')
 
   // base -> slot
   fs.writeFileSync(path.join(base, 'skills', 'b.md'), 'from-base')
-  assert.equal(fs.readFileSync(path.join(dir, 'skills', 'b.md'), 'utf8'), 'from-base')
+  expect(fs.readFileSync(path.join(dir, 'skills', 'b.md'), 'utf8')).toBe('from-base')
 
   // shared file reads through
-  assert.equal(fs.readFileSync(path.join(dir, 'settings.json'), 'utf8'), '{"model":"opus"}')
+  expect(fs.readFileSync(path.join(dir, 'settings.json'), 'utf8')).toBe('{"model":"opus"}')
 })
 
 test('list and view report shared vs own', () => {
@@ -70,23 +65,15 @@ test('list and view report shared vs own', () => {
   const r = add('work', { home, rc })
   fs.writeFileSync(path.join(r.dir, '.credentials.json'), '{}') // per-slot, a real file
 
-  assert.deepEqual(
-    list(home).map((s) => s.name),
-    ['work']
-  )
+  expect(list(home).map((s) => s.name)).toEqual(['work'])
+
   const v = view('work', home)
-  assert.deepEqual(
-    v.shared.map((s) => s.name),
-    ['projects', 'settings.json', 'skills']
-  )
-  assert.deepEqual(v.own, ['.credentials.json'])
-  assert.equal(
-    v.shared.every((s) => !s.broken),
-    true
-  )
+  expect(v.shared.map((s) => s.name)).toEqual(['projects', 'settings.json', 'skills'])
+  expect(v.own).toEqual(['.credentials.json'])
+  expect(v.shared.every((s) => !s.broken)).toBe(true)
 })
 
-test('view classifies a hard-linked file as shared, not as the slot\'s own', () => {
+test("view classifies a hard-linked file as shared, not as the slot's own", () => {
   // This is the Windows fallback for files when symlinks are not permitted; hard links
   // exist on all three platforms, so the classification is testable everywhere.
   const { home, base, rc } = fakeHome()
@@ -94,16 +81,15 @@ test('view classifies a hard-linked file as shared, not as the slot\'s own', () 
   fs.linkSync(path.join(base, 'settings.json'), path.join(dir, 'settings.json'))
 
   const v = view('work', home)
-  const entry = v.shared.find((s) => s.name === 'settings.json')
-  assert.equal(entry.kind, 'hardlink')
-  assert.equal(v.own.includes('settings.json'), false)
+  expect(v.shared.find((s) => s.name === 'settings.json').kind).toBe('hardlink')
+  expect(v.own).not.toContain('settings.json')
 })
 
-test('view flags broken links', { skip: IS_WINDOWS && 'junction removal is racy on CI runners' }, () => {
+test('view flags broken links', () => {
   const { home, base, rc } = fakeHome()
   add('work', { home, rc })
   fs.rmSync(path.join(base, 'skills'), { recursive: true })
-  assert.equal(view('work', home).shared.find((s) => s.name === 'skills').broken, true)
+  expect(view('work', home).shared.find((s) => s.name === 'skills').broken).toBe(true)
 })
 
 test('delete removes the slot and alias but NEVER the shared targets', () => {
@@ -113,12 +99,12 @@ test('delete removes the slot and alias but NEVER the shared targets', () => {
 
   const out = remove('work', { home, rc })
 
-  assert.equal(out.aliasRemoved, true)
-  assert.equal(fs.existsSync(dir), false)
-  assert.equal(fs.readFileSync(path.join(base, 'projects', 'keep.jsonl'), 'utf8'), 'precious')
-  assert.equal(fs.readFileSync(path.join(base, 'settings.json'), 'utf8'), '{"model":"opus"}')
-  assert.equal(fs.existsSync(path.join(base, 'skills')), true)
-  assert.doesNotMatch(fs.readFileSync(rc, 'utf8'), /ccwork/)
+  expect(out.aliasRemoved).toBe(true)
+  expect(fs.existsSync(dir)).toBe(false)
+  expect(fs.readFileSync(path.join(base, 'projects', 'keep.jsonl'), 'utf8')).toBe('precious')
+  expect(fs.readFileSync(path.join(base, 'settings.json'), 'utf8')).toBe('{"model":"opus"}')
+  expect(fs.existsSync(path.join(base, 'skills'))).toBe(true)
+  expect(fs.readFileSync(rc, 'utf8')).not.toMatch(/ccwork/)
 })
 
 test('delete does not follow a hard-linked file either', () => {
@@ -127,34 +113,34 @@ test('delete does not follow a hard-linked file either', () => {
   fs.linkSync(path.join(base, 'settings.json'), path.join(dir, 'settings.json'))
 
   remove('work', { home, rc })
-  assert.equal(fs.readFileSync(path.join(base, 'settings.json'), 'utf8'), '{"model":"opus"}')
+  expect(fs.readFileSync(path.join(base, 'settings.json'), 'utf8')).toBe('{"model":"opus"}')
 })
 
 test('refuses to share credentials or per-session state', () => {
-  assert.throws(() => assertShare(['.credentials.json']), UserError)
-  assert.throws(() => assertShare(['sessions']), UserError)
-  assert.throws(() => assertShare(['../evil']), UserError)
-  assert.throws(() => assertShare(['..\\evil']), UserError)
-  assert.deepEqual(assertShare(['projects']), ['projects'])
+  expect(() => assertShare(['.credentials.json'])).toThrow(UserError)
+  expect(() => assertShare(['sessions'])).toThrow(UserError)
+  expect(() => assertShare(['../evil'])).toThrow(UserError)
+  expect(() => assertShare(['..\\evil'])).toThrow(UserError)
+  expect(assertShare(['projects'])).toEqual(['projects'])
 })
 
 test('rejects bad slot names and names that shadow commands', () => {
   const { home, rc } = fakeHome()
-  assert.throws(() => add('../evil', { home, rc }), UserError)
-  assert.throws(() => add('..\\evil', { home, rc }), UserError)
-  assert.throws(() => add('', { home, rc }), UserError)
+  expect(() => add('../evil', { home, rc })).toThrow(UserError)
+  expect(() => add('..\\evil', { home, rc })).toThrow(UserError)
+  expect(() => add('', { home, rc })).toThrow(UserError)
   for (const n of ['list', 'add', 'use', 'run', 'delete']) {
-    assert.throws(() => add(n, { home, rc }), UserError, `expected ${n} to be reserved`)
+    expect(() => add(n, { home, rc }), `expected ${n} to be reserved`).toThrow(UserError)
   }
 })
 
 test('exists() gates bare-name launch and never matches a command', () => {
   const { home, rc } = fakeHome()
   add('work', { home, rc })
-  assert.equal(exists('work', home), true)
-  assert.equal(exists('personal', home), false)
-  assert.equal(exists('list', home), false)
-  assert.equal(exists('../etc', home), false)
+  expect(exists('work', home)).toBe(true)
+  expect(exists('personal', home)).toBe(false)
+  expect(exists('list', home)).toBe(false)
+  expect(exists('../etc', home)).toBe(false)
 })
 
 test('launchSpec sets CLAUDE_CONFIG_DIR, inherits the env, and passes args through', () => {
@@ -162,14 +148,14 @@ test('launchSpec sets CLAUDE_CONFIG_DIR, inherits the env, and passes args throu
   const { dir } = add('work', { home, rc })
   const spec = launchSpec('work', ['--resume', '-p', 'hi'], { home, platform: 'linux' })
 
-  assert.equal(spec.command, 'claude')
-  assert.deepEqual(spec.args, ['--resume', '-p', 'hi'])
-  assert.equal(spec.shell, false)
-  assert.equal(spec.env.CLAUDE_CONFIG_DIR, dir)
+  expect(spec.command).toBe('claude')
+  expect(spec.args).toEqual(['--resume', '-p', 'hi'])
+  expect(spec.shell).toBe(false)
+  expect(spec.env.CLAUDE_CONFIG_DIR).toBe(dir)
   // Windows spells it Path, so compare through a case-insensitive lookup.
   const pathKey = Object.keys(process.env).find((k) => k.toUpperCase() === 'PATH')
-  assert.equal(spec.env[pathKey], process.env[pathKey])
-  assert.throws(() => launchSpec('nope', [], { home }), UserError)
+  expect(spec.env[pathKey]).toBe(process.env[pathKey])
+  expect(() => launchSpec('nope', [], { home })).toThrow(UserError)
 })
 
 test('launchSpec uses a shell on Windows and quotes args for cmd', () => {
@@ -181,64 +167,68 @@ test('launchSpec uses a shell on Windows and quotes args for cmd', () => {
     platform: 'win32',
   })
 
-  assert.equal(spec.shell, true)
-  assert.deepEqual(spec.args, ['-p', '"hello world"', 'plain', '"a&b"'])
+  expect(spec.shell).toBe(true)
+  expect(spec.args).toEqual(['-p', '"hello world"', 'plain', '"a&b"'])
 })
 
 test('shellRc and detectShell per platform', () => {
   const home = '/home/u'
-  assert.equal(detectShell('/bin/zsh', 'linux'), 'zsh')
-  assert.equal(detectShell('/usr/bin/fish', 'darwin'), 'fish')
-  assert.equal(detectShell('/bin/bash', 'linux'), 'bash')
-  assert.equal(shellRc(home, '/bin/bash', 'linux'), path.join(home, '.bashrc'))
-  assert.equal(shellRc(home, '/usr/bin/fish', 'darwin'), path.join(home, '.config', 'fish', 'config.fish'))
+  expect(detectShell('/bin/zsh', 'linux')).toBe('zsh')
+  expect(detectShell('/usr/bin/fish', 'darwin')).toBe('fish')
+  expect(detectShell('/bin/bash', 'linux')).toBe('bash')
+  expect(shellRc(home, '/bin/bash', 'linux')).toBe(path.join(home, '.bashrc'))
+  expect(shellRc(home, '/usr/bin/fish', 'darwin')).toBe(
+    path.join(home, '.config', 'fish', 'config.fish')
+  )
   // No dotfile on Windows we can safely append to — add() must skip the alias there.
-  assert.equal(shellRc(home, '', 'win32'), null)
+  expect(shellRc(home, '', 'win32')).toBe(null)
 })
 
 test('add on Windows skips the alias instead of writing a bogus rc file', () => {
   const { home } = fakeHome()
   const r = add('work', { home, rc: null })
-  assert.equal(r.rc, null)
-  assert.equal(r.aliasAdded, false)
-  assert.equal(r.linked.length, 3)
+  expect(r.rc).toBe(null)
+  expect(r.aliasAdded).toBe(false)
+  expect(r.linked).toHaveLength(3)
 })
 
 test('delete tolerates a slot that never had an alias', () => {
   const { home } = fakeHome()
   add('work', { home, rc: null })
   const out = remove('work', { home, rc: null })
-  assert.equal(out.aliasRemoved, false)
-  assert.equal(fs.existsSync(out.dir), false)
+  expect(out.aliasRemoved).toBe(false)
+  expect(fs.existsSync(out.dir)).toBe(false)
 })
 
 test('exportLine and evalHint cover every supported shell', () => {
   const { home, rc } = fakeHome()
   const { dir } = add('work', { home, rc })
 
-  assert.equal(exportLine('work', { home, shell: 'zsh' }), `export CLAUDE_CONFIG_DIR='${dir}'`)
-  assert.equal(exportLine('work', { home, shell: 'bash' }), `export CLAUDE_CONFIG_DIR='${dir}'`)
-  assert.equal(exportLine('work', { home, shell: 'fish' }), `set -gx CLAUDE_CONFIG_DIR '${dir}'`)
-  assert.equal(exportLine('work', { home, shell: 'powershell' }), `$env:CLAUDE_CONFIG_DIR = '${dir}'`)
-  assert.equal(exportLine('work', { home, shell: 'cmd' }), `set CLAUDE_CONFIG_DIR=${dir}`)
+  expect(exportLine('work', { home, shell: 'zsh' })).toBe(`export CLAUDE_CONFIG_DIR='${dir}'`)
+  expect(exportLine('work', { home, shell: 'bash' })).toBe(`export CLAUDE_CONFIG_DIR='${dir}'`)
+  expect(exportLine('work', { home, shell: 'fish' })).toBe(`set -gx CLAUDE_CONFIG_DIR '${dir}'`)
+  expect(exportLine('work', { home, shell: 'powershell' })).toBe(
+    `$env:CLAUDE_CONFIG_DIR = '${dir}'`
+  )
+  expect(exportLine('work', { home, shell: 'cmd' })).toBe(`set CLAUDE_CONFIG_DIR=${dir}`)
 
-  assert.match(evalHint('work', 'zsh'), /^eval "\$\(ccslot use work\)"$/)
-  assert.match(evalHint('work', 'fish'), /\| source$/)
-  assert.match(evalHint('work', 'powershell'), /Invoke-Expression$/)
-  assert.throws(() => exportLine('nope', { home }), UserError)
+  expect(evalHint('work', 'zsh')).toBe('eval "$(ccslot use work)"')
+  expect(evalHint('work', 'fish')).toMatch(/\| source$/)
+  expect(evalHint('work', 'powershell')).toMatch(/Invoke-Expression$/)
+  expect(() => exportLine('nope', { home })).toThrow(UserError)
 })
 
-test('exportLine survives a home directory containing a single quote', { skip: IS_WINDOWS && 'no POSIX sh' }, () => {
+test.skipIf(IS_WINDOWS)('exportLine survives a home directory containing a single quote', () => {
   const home = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), "ccslot-o'brien-"))
   fs.mkdirSync(path.join(home, '.claude', 'projects'), { recursive: true })
   const { dir } = add('work', { home, rc: path.join(home, '.zshrc') })
 
   const line = exportLine('work', { home, shell: 'zsh' })
-  assert.match(line, /'\\''/) // escaped, not left to break the eval
+  expect(line).toMatch(/'\\''/) // escaped, not left to break the eval
   const echoed = execFileSync('/bin/sh', ['-c', `${line}; printf %s "$CLAUDE_CONFIG_DIR"`], {
     encoding: 'utf8',
   })
-  assert.equal(echoed, dir)
+  expect(echoed).toBe(dir)
 })
 
 test('PowerShell quoting doubles an embedded single quote', () => {
@@ -247,7 +237,7 @@ test('PowerShell quoting doubles an embedded single quote', () => {
   add('work', { home, rc: null })
 
   const line = exportLine('work', { home, shell: 'powershell' })
-  assert.match(line, /''/)
-  assert.equal(line.startsWith("$env:CLAUDE_CONFIG_DIR = '"), true)
-  assert.equal(line.endsWith("'"), true)
+  expect(line).toMatch(/''/)
+  expect(line.startsWith("$env:CLAUDE_CONFIG_DIR = '")).toBe(true)
+  expect(line.endsWith("'")).toBe(true)
 })
