@@ -23,7 +23,15 @@ jobs:
           cache: pnpm
           registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
       - run: pnpm test
+
+      # changesets crashes instead of printing npm's E403, so check the token first:
+      # this prints the account the token belongs to, or fails with the real reason.
+      - name: Check the npm token
+        run: npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # Opens/updates a "Version Packages" PR. Merging it publishes to npm.
       - uses: changesets/action@v1
