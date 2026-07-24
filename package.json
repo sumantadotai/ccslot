@@ -1,0 +1,42 @@
+{
+  "name": "ccslot",
+  "version": "0.1.0",
+  "description": "Run multiple Claude Code accounts on one machine. Separate logins, shared projects/skills/plans/settings.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "anthropic",
+    "cli",
+    "accounts",
+    "profiles",
+    "CLAUDE_CONFIG_DIR"
+  ],
+  "license": "MIT",
+  "author": "Sumanta Kabiraj",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sumantadotai/ccslot.git"
+  },
+  "homepage": "https://github.com/sumantadotai/ccslot#readme",
+  "bugs": "https://github.com/sumantadotai/ccslot/issues",
+  "type": "module",
+  "bin": {
+    "ccslot": "bin/ccslot.js"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "release": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/cli": "^2.31.1"
+  },
+  "packageManager": "pnpm@11.10.0"
+}
