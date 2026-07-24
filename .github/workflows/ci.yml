@@ -59,6 +59,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
       - run: pnpm test:coverage
       # Straight into the run summary — no third-party action, no PR comment noise.
       - name: Publish coverage to the job summary

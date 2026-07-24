@@ -5,11 +5,7 @@
 export default {
   extends: ['@commitlint/config-conventional'],
   rules: {
-    'scope-enum': [
-      1,
-      'always',
-      ['core', 'cli', 'docs', 'ci', 'tests', 'deps', 'assets'],
-    ],
+    'scope-enum': [1, 'always', ['core', 'cli', 'docs', 'ci', 'tests', 'deps', 'assets']],
     'body-max-line-length': [1, 'always', 100],
   },
 }

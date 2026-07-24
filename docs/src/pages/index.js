@@ -134,15 +134,17 @@ export default function Home() {
         <div className={styles.two}>
           <div>
             <p>
-              Claude Code keeps everything in <code>~/.claude</code> — your login, but also
-              your project history, your skills, your settings, your saved plans.
+              Claude Code keeps everything in <code>~/.claude</code> — your login, but also your
+              project history, your skills, your settings, your saved plans.
             </p>
             <p>
-              That's fine until you have two accounts. Then it's one seat two people are
-              fighting over, and switching means <code>/logout</code> → <code>/login</code> →
-              browser → approve → and the session you were mid-way through is gone.
+              That's fine until you have two accounts. Then it's one seat two people are fighting
+              over, and switching means <code>/logout</code> → <code>/login</code> → browser →
+              approve → and the session you were mid-way through is gone.
             </p>
-            <p className={styles.muted}>Do that four times a day and you go looking for a better way.</p>
+            <p className={styles.muted}>
+              Do that four times a day and you go looking for a better way.
+            </p>
           </div>
           <Terminal title="the old way">
             {L.dim('/logout\n')}
@@ -156,10 +158,10 @@ export default function Home() {
       {/* ----------------------------------------------------------------- fix */}
       <Section kicker="the fix" title="Separate the auth, share the rest" className={styles.alt}>
         <p className={styles.wide}>
-          Claude Code reads <code>CLAUDE_CONFIG_DIR</code>. Point it somewhere else and you get
-          a blank install. <strong>ccslot</strong> creates that directory, then symlinks the
-          parts worth sharing back to the original — so the second account has its own identity
-          and the same brain.
+          Claude Code reads <code>CLAUDE_CONFIG_DIR</code>. Point it somewhere else and you get a
+          blank install. <strong>ccslot</strong> creates that directory, then symlinks the parts
+          worth sharing back to the original — so the second account has its own identity and the
+          same brain.
         </p>
 
         <div className={styles.diagram}>
@@ -193,8 +195,8 @@ export default function Home() {
           </div>
         </div>
         <p className={styles.caption}>
-          Linked names read and write the originals. Everything else Claude Code writes stays
-          inside the slot.
+          Linked names read and write the originals. Everything else Claude Code writes stays inside
+          the slot.
         </p>
       </Section>
 
@@ -222,9 +224,9 @@ export default function Home() {
           </Terminal>
           <div>
             <p>
-              Two terminals, two accounts, neither aware of the other's login. The part that
-              still makes me happy is <code>/resume</code>: a conversation started under one
-              account, picked up under a different one, in the same repo.
+              Two terminals, two accounts, neither aware of the other's login. The part that still
+              makes me happy is <code>/resume</code>: a conversation started under one account,
+              picked up under a different one, in the same repo.
             </p>
             <p>
               The history lives in the shared <code>projects/</code>, so it doesn't matter which
@@ -250,9 +252,8 @@ export default function Home() {
         <p>
           ccslot manages Claude Code's config dirs — it doesn't ship Claude Code. If{' '}
           <code>claude</code> isn't on your PATH, anything that would launch it stops with
-          instructions instead of an <code>ENOENT</code>, and <code>ccslot install</code> will
-          offer to open the{' '}
-          <a href="https://code.claude.com/docs/en/overview">official docs</a> for you.
+          instructions instead of an <code>ENOENT</code>, and <code>ccslot install</code> will offer
+          to open the <a href="https://code.claude.com/docs/en/overview">official docs</a> for you.
         </p>
         <Terminal title="ccslot install">
           {L.dim('  Claude Code is not installed (no `claude` on your PATH).\n')}
@@ -283,16 +284,20 @@ export default function Home() {
         </Terminal>
         <p className={styles.caption}>
           <code>use</code> needs the <code>eval</code> because a child process cannot change its
-          parent shell's environment — no CLI can. Run it bare and it prints the exact line for
-          your shell; fish, PowerShell and cmd each get their own syntax.
+          parent shell's environment — no CLI can. Run it bare and it prints the exact line for your
+          shell; fish, PowerShell and cmd each get their own syntax.
         </p>
       </Section>
 
       {/* ------------------------------------------------------------------ mcp */}
-      <Section id="mcp" kicker="the bonus nobody expects" title="A second identity for your MCP servers">
+      <Section
+        id="mcp"
+        kicker="the bonus nobody expects"
+        title="A second identity for your MCP servers"
+      >
         <p className={styles.wide}>
-          OAuth-based MCP connections are stored <strong>per config dir</strong>, exactly like
-          your Claude login. So a slot isn't only a second Claude account — it's a second set of
+          OAuth-based MCP connections are stored <strong>per config dir</strong>, exactly like your
+          Claude login. So a slot isn't only a second Claude account — it's a second set of
           credentials for everything Claude connects to.
         </p>
 
@@ -328,14 +333,14 @@ export default function Home() {
         </div>
 
         <p className={styles.caption}>
-          Same MCP server, different identity, no re-authorizing when you switch — while skills
-          and history stay shared across both. Useful for contractors, anyone in two orgs, or
-          keeping a personal Notion well away from a company one.
+          Same MCP server, different identity, no re-authorizing when you switch — while skills and
+          history stay shared across both. Useful for contractors, anyone in two orgs, or keeping a
+          personal Notion well away from a company one.
         </p>
         <p className={styles.wide}>
-          The cost is the flip side of the same coin: <strong>each new slot authorizes its MCP
-          servers once.</strong> That's the isolation doing its job, just pointed at something
-          less convenient than your login.
+          The cost is the flip side of the same coin:{' '}
+          <strong>each new slot authorizes its MCP servers once.</strong> That's the isolation doing
+          its job, just pointed at something less convenient than your login.
         </p>
       </Section>
 
@@ -366,8 +371,8 @@ export default function Home() {
           </div>
         </div>
         <p className={styles.caption}>
-          ccslot <strong>refuses</strong> to share <code>.credentials.json</code> even if you put
-          it in your config. Sharing auth defeats the entire point.
+          ccslot <strong>refuses</strong> to share <code>.credentials.json</code> even if you put it
+          in your config. Sharing auth defeats the entire point.
         </p>
       </Section>
 
@@ -375,16 +380,15 @@ export default function Home() {
       <Section kicker="before you commit" title="Things that will bite you">
         <ol className={styles.gotchas}>
           <li>
-            <strong>Same repo, two accounts, at once.</strong> They share <code>projects/</code>,
-            so two live sessions in one repo are two processes writing near the same place.
-            Nothing has corrupted in practice — but if you want it guaranteed, drop{' '}
-            <code>projects</code> from the shared list and lose cross-account{' '}
-            <code>/resume</code>.
+            <strong>Same repo, two accounts, at once.</strong> They share <code>projects/</code>, so
+            two live sessions in one repo are two processes writing near the same place. Nothing has
+            corrupted in practice — but if you want it guaranteed, drop <code>projects</code> from
+            the shared list and lose cross-account <code>/resume</code>.
           </li>
           <li>
             <strong>Windows without Developer Mode.</strong> Symlinks need a privilege there, so
-            ccslot falls back to junctions for directories and hard links for files. Same
-            behaviour; <code>ccslot view</code> tells you which kind you got.
+            ccslot falls back to junctions for directories and hard links for files. Same behaviour;{' '}
+            <code>ccslot view</code> tells you which kind you got.
           </li>
           <li>
             <strong>Backup tools and symlinks.</strong> If you sync <code>~/.claude</code>, check

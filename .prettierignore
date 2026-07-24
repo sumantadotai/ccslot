@@ -1,0 +1,6 @@
+coverage
+docs/build
+docs/.docusaurus
+pnpm-lock.yaml
+docs/pnpm-lock.yaml
+CHANGELOG.md

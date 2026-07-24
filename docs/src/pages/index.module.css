@@ -43,12 +43,24 @@
 .heroLinks {
   animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
-.heroLogo { animation-delay: 0.02s; }
-.h1 { animation-delay: 0.08s; }
-.lede { animation-delay: 0.14s; }
-.hero .install { animation-delay: 0.2s; }
-.hero .subtle { animation-delay: 0.26s; }
-.heroLinks { animation-delay: 0.32s; }
+.heroLogo {
+  animation-delay: 0.02s;
+}
+.h1 {
+  animation-delay: 0.08s;
+}
+.lede {
+  animation-delay: 0.14s;
+}
+.hero .install {
+  animation-delay: 0.2s;
+}
+.hero .subtle {
+  animation-delay: 0.26s;
+}
+.heroLinks {
+  animation-delay: 0.32s;
+}
 
 @keyframes rise {
   from {
@@ -124,7 +136,9 @@
   border-radius: 6px;
   padding: 6px 10px;
   cursor: pointer;
-  transition: color 0.18s, border-color 0.18s;
+  transition:
+    color 0.18s,
+    border-color 0.18s;
 }
 .copy:hover {
   color: var(--cc-coral);
@@ -161,7 +175,10 @@
   border-radius: 7px;
   text-decoration: none;
   border: 1px solid transparent;
-  transition: background 0.18s, color 0.18s, border-color 0.18s;
+  transition:
+    background 0.18s,
+    color 0.18s,
+    border-color 0.18s;
 }
 .btn {
   background: var(--cc-coral);
@@ -267,9 +284,15 @@
   border-radius: 50%;
   background: #3a342e;
 }
-.dot[data-c='r'] { background: #d9603f; }
-.dot[data-c='y'] { background: #c9a227; }
-.dot[data-c='g'] { background: #5f8a4e; }
+.dot[data-c='r'] {
+  background: #d9603f;
+}
+.dot[data-c='y'] {
+  background: #c9a227;
+}
+.dot[data-c='g'] {
+  background: #5f8a4e;
+}
 
 .termTitle {
   margin-left: 8px;
@@ -290,9 +313,15 @@
   white-space: pre;
 }
 
-.tCmd { color: #e6ded4; }
-.tDim { color: #7d746a; }
-.tHi { color: #e8734f; }
+.tCmd {
+  color: #e6ded4;
+}
+.tDim {
+  color: #7d746a;
+}
+.tHi {
+  color: #e8734f;
+}
 
 /* ------------------------------------------------------------------ diagram */
 

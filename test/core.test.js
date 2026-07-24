@@ -258,9 +258,9 @@ test('findClaude walks PATH, and honours PATHEXT on Windows', () => {
   // Windows: the bare name is not executable, only claude.cmd is — and the env var is Path.
   expect(findClaude({ env: { Path: PATH, PATHEXT: '.EXE;.CMD' }, platform: 'win32' })).toBe(null)
   fs.writeFileSync(path.join(dir, 'claude.CMD'), '')
-  expect(
-    findClaude({ env: { Path: PATH, PATHEXT: '.EXE;.CMD' }, platform: 'win32' })
-  ).toBe(path.join(dir, 'claude.CMD'))
+  expect(findClaude({ env: { Path: PATH, PATHEXT: '.EXE;.CMD' }, platform: 'win32' })).toBe(
+    path.join(dir, 'claude.CMD')
+  )
 })
 
 test('findClaude survives an unset or unreadable PATH', () => {

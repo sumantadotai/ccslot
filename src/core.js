@@ -28,7 +28,17 @@ const NAME_RE = /^[a-z0-9][a-z0-9._-]*$/i
 
 /** Subcommands shadow slot names in `ccslot <name>`, so a slot may not be called one. */
 export const RESERVED = new Set([
-  'add', 'list', 'view', 'delete', 'rm', 'use', 'run', 'config', 'help', 'install', 'doctor',
+  'add',
+  'list',
+  'view',
+  'delete',
+  'rm',
+  'use',
+  'run',
+  'config',
+  'help',
+  'install',
+  'doctor',
 ])
 
 export class UserError extends Error {}
@@ -101,7 +111,11 @@ export function detectShell(shell = process.env.SHELL ?? '', platform = process.
 }
 
 /** null on Windows: there is no dotfile we can append an alias to without guessing. */
-export function shellRc(home = os.homedir(), shell = process.env.SHELL ?? '', platform = process.platform) {
+export function shellRc(
+  home = os.homedir(),
+  shell = process.env.SHELL ?? '',
+  platform = process.platform
+) {
   switch (detectShell(shell, platform)) {
     case 'powershell':
     case 'cmd':
@@ -216,7 +230,8 @@ export function add(name, { home = os.homedir(), share, aliasPrefix, rc, writeAl
 
   const alias = `${aliasPrefix ?? cfg.aliasPrefix}${name}`
   const rcFile = rc === undefined ? shellRc(home) : rc
-  const aliasAdded = writeAlias && rcFile ? appendAlias(rcFile, aliasLine(alias, name, rcFile)) : false
+  const aliasAdded =
+    writeAlias && rcFile ? appendAlias(rcFile, aliasLine(alias, name, rcFile)) : false
 
   return { dir, alias, linked, missing, rc: rcFile, aliasAdded }
 }
@@ -252,7 +267,12 @@ export function view(name, home = os.homedir()) {
     const p = path.join(dir, entry)
     const target = path.join(base, entry)
     if (isLink(p)) {
-      shared.push({ name: entry, kind: 'symlink', target: fs.readlinkSync(p), broken: !fs.existsSync(p) })
+      shared.push({
+        name: entry,
+        kind: 'symlink',
+        target: fs.readlinkSync(p),
+        broken: !fs.existsSync(p),
+      })
     } else if (isHardLinkOf(p, target)) {
       shared.push({ name: entry, kind: 'hardlink', target, broken: false })
     } else {
@@ -277,7 +297,11 @@ export function view(name, home = os.homedir()) {
  * Windows ships `claude` as claude.cmd, which CreateProcess cannot run directly —
  * hence shell: true there, and only there.
  */
-export function launchSpec(name, args = [], { home = os.homedir(), command = 'claude', platform = process.platform } = {}) {
+export function launchSpec(
+  name,
+  args = [],
+  { home = os.homedir(), command = 'claude', platform = process.platform } = {}
+) {
   assertName(name)
   const dir = paths(home).slotDir(name)
   if (!fs.existsSync(dir)) {
@@ -300,7 +324,11 @@ export const CLAUDE_DOCS = 'https://code.claude.com/docs/en/overview'
  * which/where: no child process, works the same on all three platforms, and it
  * can be tested against a fake PATH.
  */
-export function findClaude({ env = process.env, platform = process.platform, command = 'claude' } = {}) {
+export function findClaude({
+  env = process.env,
+  platform = process.platform,
+  command = 'claude',
+} = {}) {
   // Windows spells it Path, and an extension-less file there is not executable.
   const pathKey = Object.keys(env).find((k) => k.toUpperCase() === 'PATH') ?? 'PATH'
   const exts =

@@ -64,16 +64,16 @@ On Windows the first line is `irm https://claude.ai/install.ps1 | iex`.
 
 ## Commands
 
-| | |
-| --- | --- |
-| `ccslot add <name>` | create `~/.claude-<name>`, link shared paths, add a shell alias |
-| `ccslot list` | list slots — `*` marks the one active in this shell |
-| `ccslot view <name>` | what a slot shares and what is its own |
-| `ccslot delete <name>` | remove the slot dir and its alias (shared targets untouched) |
-| `ccslot <name> [args…]` | launch Claude Code as that slot |
-| `ccslot run <name> [args…]` | same, explicit form |
-| `ccslot use <name>` | switch the current shell (needs `eval`, see below) |
-| `ccslot install` | check whether Claude Code is installed, and show how to get it |
+|                             |                                                                 |
+| --------------------------- | --------------------------------------------------------------- |
+| `ccslot add <name>`         | create `~/.claude-<name>`, link shared paths, add a shell alias |
+| `ccslot list`               | list slots — `*` marks the one active in this shell             |
+| `ccslot view <name>`        | what a slot shares and what is its own                          |
+| `ccslot delete <name>`      | remove the slot dir and its alias (shared targets untouched)    |
+| `ccslot <name> [args…]`     | launch Claude Code as that slot                                 |
+| `ccslot run <name> [args…]` | same, explicit form                                             |
+| `ccslot use <name>`         | switch the current shell (needs `eval`, see below)              |
+| `ccslot install`            | check whether Claude Code is installed, and show how to get it  |
 
 Options for `add` / `delete`:
 
@@ -112,12 +112,12 @@ Optional `~/.ccslotrc.json`:
 }
 ```
 
-| Shared | Why |
-| --- | --- |
-| `projects` | `/resume` works across accounts |
-| `skills` | write a skill once, every account has it |
-| `plans` | plans made in one account readable from another |
-| `settings.json` | one place for permissions, hooks, preferences |
+| Shared          | Why                                             |
+| --------------- | ----------------------------------------------- |
+| `projects`      | `/resume` works across accounts                 |
+| `skills`        | write a skill once, every account has it        |
+| `plans`         | plans made in one account readable from another |
+| `settings.json` | one place for permissions, hooks, preferences   |
 
 Everything else — `sessions`, `history.jsonl`, `.claude.json`, `plugins` — stays per slot.
 Those are written by live sessions, so sharing them means two processes fighting over one file.

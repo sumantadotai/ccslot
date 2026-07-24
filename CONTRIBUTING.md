@@ -10,7 +10,12 @@ pnpm test           # vitest, ~3s
 pnpm test:watch
 pnpm test:coverage  # writes coverage/ (also posted to the CI job summary)
 pnpm docs:dev       # the docs site at localhost:3000
+pnpm format         # prettier over the repo
 ```
+
+`pre-commit` runs lint-staged: prettier over the staged files, then the tests related to
+them. `commit-msg` runs commitlint. CI re-checks formatting, so a bypassed hook only
+delays the news.
 
 Node 22+. Node 20 is end-of-life and CI does not test it.
 
@@ -37,7 +42,7 @@ chore(deps): bump vitest
 Types: `feat` `fix` `docs` `test` `refactor` `perf` `build` `ci` `chore` `revert`.
 Scopes (optional): `core` `cli` `docs` `ci` `tests` `deps` `assets`.
 
-`pnpm test` runs on `pre-commit`. If a hook is in your way, `git commit --no-verify` exists —
+If a hook is in your way, `git commit --no-verify` exists —
 CI will just catch it later.
 
 ## Pull requests

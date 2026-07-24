@@ -124,7 +124,11 @@ async function runCommand(cmd, rest) {
     const a = rest[i]
     if (a === '--no-alias') flags.noAlias = true
     else if (a === '-y' || a === '--yes') flags.yes = true
-    else if (a === '--share') flags.share = rest[++i]?.split(',').map((s) => s.trim()).filter(Boolean)
+    else if (a === '--share')
+      flags.share = rest[++i]
+        ?.split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
     else if (a === '--prefix') flags.prefix = rest[++i]
     else if (a === '--rc') flags.rc = rest[++i]
     else if (a === '--shell') flags.shell = rest[++i]
@@ -179,7 +183,9 @@ async function runCommand(cmd, rest) {
       console.log(`${s.name}\n  dir    ${s.dir}\n  alias  ${s.alias}\n  env    ${s.env}`)
       console.log('  shared:')
       for (const x of s.shared) {
-        console.log(`    ${x.broken ? 'BROKEN ' : ''}${x.name} -> ${x.target}${x.kind === 'symlink' ? '' : ` (${x.kind})`}`)
+        console.log(
+          `    ${x.broken ? 'BROKEN ' : ''}${x.name} -> ${x.target}${x.kind === 'symlink' ? '' : ` (${x.kind})`}`
+        )
       }
       console.log('  own:')
       for (const x of s.own) console.log(`    ${x}`)
@@ -211,8 +217,12 @@ async function runCommand(cmd, rest) {
       }
       const r = remove(name, { rc: flags.rc, aliasPrefix: flags.prefix })
       console.log(`removed ${r.dir}`)
-      console.log(r.aliasRemoved ? `removed alias ${r.alias} from ${r.rc}` : `no alias ${r.alias} in ${r.rc}`)
-      console.log('note: the Keychain entry for this config dir is left alone (Keychain Access can remove it)')
+      console.log(
+        r.aliasRemoved ? `removed alias ${r.alias} from ${r.rc}` : `no alias ${r.alias} in ${r.rc}`
+      )
+      console.log(
+        'note: the Keychain entry for this config dir is left alone (Keychain Access can remove it)'
+      )
       break
     }
     case 'install':
@@ -220,7 +230,9 @@ async function runCommand(cmd, rest) {
       const found = findClaude()
       if (found) {
         console.log(`claude   ${found}`)
-        console.log(`docs     ${CLAUDE_DOCS}\n\nClaude Code is installed — you're set. Try: ccslot add work`)
+        console.log(
+          `docs     ${CLAUDE_DOCS}\n\nClaude Code is installed — you're set. Try: ccslot add work`
+        )
         break
       }
       console.error(claudeMissingReport())

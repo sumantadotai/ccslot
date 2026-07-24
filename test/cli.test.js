@@ -57,7 +57,8 @@ function sandbox() {
   const run = (...args) => spawnWith(binDir + path.delimiter + process.env[pathKey], args)
   // An empty PATH, not the real one — otherwise a dev with Claude Code installed
   // would never see the not-installed path this exercises.
-  const empty = fs.mkdirSync(path.join(root, 'empty'), { recursive: true }) ?? path.join(root, 'empty')
+  const empty =
+    fs.mkdirSync(path.join(root, 'empty'), { recursive: true }) ?? path.join(root, 'empty')
   const runWithoutClaude = (...args) => spawnWith(empty, args)
 
   return { root, home, base, run, runWithoutClaude }

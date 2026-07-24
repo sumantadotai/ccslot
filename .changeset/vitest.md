@@ -1,5 +1,5 @@
 ---
-"ccslot": patch
+'ccslot': patch
 ---
 
 Tests now run on Vitest.
