@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 340" width="1200" height="340" role="img" aria-label="ccslot — multiple Claude Code accounts on one machine">
+  <title>ccslot — multiple Claude Code accounts on one machine</title>
+  <!-- Transparent background so it sits on GitHub's light and dark themes alike;
+       every fill is a mid-tone that keeps contrast either way.
+       textLength pins each line's width, so the layout holds whatever monospace
+       font the viewer's machine substitutes. -->
+
+  <g transform="translate(96 104) scale(0.52)">
+    <rect x="26" y="44" width="164" height="44" rx="22" fill="#8A8079"/>
+    <circle cx="168" cy="66" r="7" fill="#8A8079" opacity="0.4"/>
+    <rect x="66" y="106" width="164" height="44" rx="22" fill="#D9603F"/>
+    <circle cx="208" cy="128" r="7" fill="#A03C22" opacity="0.6"/>
+    <rect x="26" y="168" width="164" height="44" rx="22" fill="#8A8079"/>
+    <circle cx="168" cy="190" r="7" fill="#8A8079" opacity="0.4"/>
+  </g>
+
+  <!-- hairline rule, doubles as a drawer edge -->
+  <rect x="96" y="256" width="1008" height="2" fill="#8A8079" opacity="0.28"/>
+
+  <text x="264" y="166" textLength="290" lengthAdjust="spacingAndGlyphs"
+        font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace"
+        font-size="84" font-weight="700" fill="#D9603F">ccslot</text>
+
+  <text x="266" y="214" textLength="620" lengthAdjust="spacingAndGlyphs"
+        font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace"
+        font-size="25" fill="#8A8079">multiple Claude Code accounts on one machine</text>
+
+  <text x="96" y="300" textLength="1008" lengthAdjust="spacingAndGlyphs"
+        font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace"
+        font-size="21" fill="#8A8079">separate logins · shared projects, skills, plans and settings · no logout dance</text>
+</svg>

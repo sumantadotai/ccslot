@@ -15,6 +15,9 @@ import {
   detectShell,
   shellRc,
   assertShare,
+  findClaude,
+  installHelp,
+  openSpec,
   UserError,
 } from '../src/core.js'
 
@@ -240,4 +243,44 @@ test('PowerShell quoting doubles an embedded single quote', () => {
   expect(line).toMatch(/''/)
   expect(line.startsWith("$env:CLAUDE_CONFIG_DIR = '")).toBe(true)
   expect(line.endsWith("'")).toBe(true)
+})
+
+test('findClaude walks PATH, and honours PATHEXT on Windows', () => {
+  const dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'ccslot-path-'))
+  const other = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'ccslot-path2-'))
+  const PATH = [other, dir].join(path.delimiter)
+
+  expect(findClaude({ env: { PATH }, platform: 'linux' })).toBe(null)
+
+  fs.writeFileSync(path.join(dir, 'claude'), '')
+  expect(findClaude({ env: { PATH }, platform: 'linux' })).toBe(path.join(dir, 'claude'))
+
+  // Windows: the bare name is not executable, only claude.cmd is — and the env var is Path.
+  expect(findClaude({ env: { Path: PATH, PATHEXT: '.EXE;.CMD' }, platform: 'win32' })).toBe(null)
+  fs.writeFileSync(path.join(dir, 'claude.CMD'), '')
+  expect(
+    findClaude({ env: { Path: PATH, PATHEXT: '.EXE;.CMD' }, platform: 'win32' })
+  ).toBe(path.join(dir, 'claude.CMD'))
+})
+
+test('findClaude survives an unset or unreadable PATH', () => {
+  expect(findClaude({ env: {}, platform: 'linux' })).toBe(null)
+  expect(findClaude({ env: { PATH: '/nope/nowhere' }, platform: 'linux' })).toBe(null)
+})
+
+test('installHelp gives the right installer per platform and always the docs URL', () => {
+  for (const p of ['darwin', 'linux', 'win32']) {
+    const h = installHelp(p)
+    expect(h.docs).toBe('https://code.claude.com/docs/en/overview')
+    expect(h.steps.some(([, cmd]) => cmd.includes('@anthropic-ai/claude-code'))).toBe(true)
+    expect(h.steps[0][1]).toMatch(p === 'win32' ? /install\.ps1/ : /install\.sh/)
+  }
+})
+
+test('openSpec picks the platform opener', () => {
+  expect(openSpec('u', 'darwin').command).toBe('open')
+  expect(openSpec('u', 'linux').command).toBe('xdg-open')
+  const win = openSpec('u', 'win32')
+  expect(win.command).toBe('start')
+  expect(win.shell).toBe(true) // start is a cmd.exe builtin
 })

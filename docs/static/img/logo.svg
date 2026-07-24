@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="ccslot">
+  <title>ccslot</title>
+  <!-- Three drawers. The middle one is pulled out: one account, its own slot. -->
+  <g>
+    <rect x="26" y="44" width="164" height="44" rx="22" fill="#3C3733"/>
+    <circle cx="168" cy="66" r="7" fill="#F5F1EA" opacity="0.55"/>
+  </g>
+  <g>
+    <rect x="66" y="106" width="164" height="44" rx="22" fill="#D9603F"/>
+    <circle cx="208" cy="128" r="7" fill="#2A2521" opacity="0.45"/>
+  </g>
+  <g>
+    <rect x="26" y="168" width="164" height="44" rx="22" fill="#3C3733"/>
+    <circle cx="168" cy="190" r="7" fill="#F5F1EA" opacity="0.55"/>
+  </g>
+</svg>

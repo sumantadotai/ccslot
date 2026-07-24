@@ -42,7 +42,7 @@ function sandbox() {
   // key rather than adding a second one that differs only in case.
   const pathKey = Object.keys(process.env).find((k) => k.toUpperCase() === 'PATH') ?? 'PATH'
 
-  const run = (...args) =>
+  const spawnWith = (dirs, args) =>
     spawnSync(process.execPath, [BIN, ...args], {
       encoding: 'utf8',
       env: {
@@ -50,11 +50,17 @@ function sandbox() {
         HOME: home,
         USERPROFILE: home, // os.homedir() reads this on Windows
         SHELL: IS_WINDOWS ? '' : '/bin/zsh',
-        [pathKey]: binDir + path.delimiter + process.env[pathKey],
+        [pathKey]: dirs,
       },
     })
 
-  return { root, home, base, run }
+  const run = (...args) => spawnWith(binDir + path.delimiter + process.env[pathKey], args)
+  // An empty PATH, not the real one — otherwise a dev with Claude Code installed
+  // would never see the not-installed path this exercises.
+  const empty = fs.mkdirSync(path.join(root, 'empty'), { recursive: true }) ?? path.join(root, 'empty')
+  const runWithoutClaude = (...args) => spawnWith(empty, args)
+
+  return { root, home, base, run, runWithoutClaude }
 }
 
 test('add creates a slot and reports what it shared', () => {
@@ -175,6 +181,40 @@ test('errors exit non-zero with a usable message', () => {
   const noArgs = run()
   expect(noArgs.status).toBe(1)
   expect(noArgs.stdout).toMatch(/ccslot add <name>/)
+})
+
+test('launching without Claude Code installed explains how to install it', () => {
+  const { run, runWithoutClaude } = sandbox()
+  run('add', 'work')
+
+  const r = runWithoutClaude('work')
+  expect(r.status).toBe(127)
+  expect(r.stderr).toMatch(/Claude Code is not installed/)
+  expect(r.stderr).toMatch(/code\.claude\.com\/docs/)
+  expect(r.stderr).toMatch(IS_WINDOWS ? /install\.ps1/ : /install\.sh/)
+  expect(r.stderr).toMatch(/npm install -g @anthropic-ai\/claude-code/)
+})
+
+test('add still succeeds without Claude Code, but warns', () => {
+  const { runWithoutClaude, home } = sandbox()
+  const r = runWithoutClaude('add', 'work')
+
+  expect(r.status, r.stderr).toBe(0)
+  expect(fs.existsSync(path.join(home, '.claude-work'))).toBe(true)
+  expect(r.stderr).toMatch(/Claude Code is not installed/)
+})
+
+test('install reports the claude it found, or how to get one', () => {
+  const { run, runWithoutClaude } = sandbox()
+
+  const ok = run('install')
+  expect(ok.status, ok.stderr).toBe(0)
+  expect(ok.stdout).toMatch(/Claude Code is installed/)
+
+  // Non-TTY stdin, so the "open the docs?" prompt declines rather than hanging.
+  const missing = runWithoutClaude('doctor')
+  expect(missing.status).toBe(127)
+  expect(missing.stderr).toMatch(/Claude Code is not installed/)
 })
 
 test('--help exits zero', () => {

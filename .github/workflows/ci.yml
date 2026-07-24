@@ -14,14 +14,64 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Node 20 is end-of-life; 22 is the floor we support.
         os: [ubuntu-latest, macos-latest, windows-latest]
-        node: [20, 22, 24]
+        node: [22, 24]
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-      # npm, not pnpm: pnpm 11 refuses to run on Node < 22.13, which would cost us the
-      # Node 20 row. ccslot has no runtime deps, so this only installs vitest.
-      - run: npm install --no-audit --no-fund
-      - run: npm test
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  commits:
+    # Husky can be bypassed with --no-verify; this is the rule that actually holds.
+    if: github.event_name == 'pull_request' && github.head_ref != 'changeset-release/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Lint commit messages
+        run: >
+          pnpm exec commitlint
+          --from ${{ github.event.pull_request.base.sha }}
+          --to ${{ github.event.pull_request.head.sha }}
+          --verbose
+
+  coverage:
+    if: github.head_ref != 'changeset-release/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:coverage
+      # Straight into the run summary — no third-party action, no PR comment noise.
+      - name: Publish coverage to the job summary
+        if: always()
+        run: |
+          {
+            echo '## Coverage'
+            echo '```'
+            cat coverage/coverage.txt || echo 'no coverage report produced'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/

@@ -12,6 +12,10 @@ import {
   detectShell,
   loadConfig,
   shellRc,
+  findClaude,
+  installHelp,
+  openSpec,
+  CLAUDE_DOCS,
   UserError,
   DEFAULT_SHARE,
 } from '../src/core.js'
@@ -26,6 +30,7 @@ const USAGE = `ccslot — multiple Claude Code accounts on one machine
   ccslot <name> [args...]    launch Claude Code as that slot
   ccslot run <name> [args…]  same, explicit — use when a slot shares a name with a command
   ccslot use <name>          switch the CURRENT shell — needs eval, run it bare to see how
+  ccslot install             check for Claude Code and show how to install it
 
 Shell for \`use\` is detected from $SHELL; force it with
   --shell zsh|bash|fish|powershell|cmd
@@ -49,20 +54,41 @@ function fail(msg) {
   process.exit(1)
 }
 
+/** The one place that explains a missing Claude Code, so every path says the same thing. */
+function claudeMissingReport() {
+  const { docs, steps } = installHelp()
+  const width = Math.max(...steps.map(([label]) => label.length))
+  return [
+    '',
+    '  Claude Code is not installed (no `claude` on your PATH).',
+    '  ccslot only manages its config dirs — it needs the CLI itself.',
+    '',
+    ...steps.map(([label, cmd]) => `  ${label.padEnd(width)}   ${cmd}`),
+    '',
+    `  docs   ${docs}`,
+    '',
+    '  Run `ccslot install` to open that page and see these commands again.',
+    '',
+  ].join('\n')
+}
+
 function launch(name, args) {
   const spec = launchSpec(name, args)
+  // Fail before spawning: ENOENT from a shell (Windows) is not reliably distinguishable.
+  if (!findClaude({ command: spec.command })) {
+    console.error(claudeMissingReport())
+    process.exit(127)
+  }
   const child = spawn(spec.command, spec.args, {
     stdio: 'inherit',
     env: spec.env,
     shell: spec.shell,
   })
-  child.on('error', (e) =>
-    fail(
-      e.code === 'ENOENT'
-        ? `could not find \`claude\` on your PATH — install Claude Code first`
-        : e.message
-    )
-  )
+  child.on('error', (e) => {
+    if (e.code !== 'ENOENT') fail(e.message)
+    console.error(claudeMissingReport())
+    process.exit(127)
+  })
   child.on('exit', (code, signal) => process.exit(signal ? 1 : (code ?? 0)))
 }
 
@@ -127,6 +153,8 @@ async function runCommand(cmd, rest) {
       else if (!flags.noAlias && r.rc) console.log(`alias ${r.alias} already in ${r.rc}`)
       console.log(`\nnext: ccslot ${name}`)
       if (r.rc) console.log(`or:   source ${r.rc} && ${r.alias}`)
+      // The slot is valid either way — this is a warning, not a failure.
+      if (!findClaude()) console.error(claudeMissingReport())
       break
     }
     case 'list': {
@@ -186,6 +214,21 @@ async function runCommand(cmd, rest) {
       console.log(r.aliasRemoved ? `removed alias ${r.alias} from ${r.rc}` : `no alias ${r.alias} in ${r.rc}`)
       console.log('note: the Keychain entry for this config dir is left alone (Keychain Access can remove it)')
       break
+    }
+    case 'install':
+    case 'doctor': {
+      const found = findClaude()
+      if (found) {
+        console.log(`claude   ${found}`)
+        console.log(`docs     ${CLAUDE_DOCS}\n\nClaude Code is installed — you're set. Try: ccslot add work`)
+        break
+      }
+      console.error(claudeMissingReport())
+      if (await confirm(`open ${CLAUDE_DOCS} in your browser?`, flags.yes)) {
+        const o = openSpec(CLAUDE_DOCS)
+        spawn(o.command, o.args, { stdio: 'ignore', shell: o.shell, detached: true }).unref()
+      }
+      process.exit(127)
     }
     case 'config': {
       console.log(JSON.stringify({ ...loadConfig(), rc: shellRc() }, null, 2))

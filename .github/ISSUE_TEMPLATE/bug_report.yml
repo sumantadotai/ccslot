@@ -1,0 +1,64 @@
+name: Bug report
+description: Something in ccslot does not work
+title: 'bug: '
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. `ccslot view <name>` and `ccslot install` output
+        usually answer half the questions below — paste them if you can.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran, and what it did instead of what you expected.
+      placeholder: |
+        $ ccslot add work
+        ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Linux
+        - Windows
+        - Windows (WSL)
+    validations:
+      required: true
+
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Output of `node -v`, your ccslot version, and `claude --version`.
+      placeholder: node v22.14.0 · ccslot 0.2.0 · claude 2.x
+    validations:
+      required: true
+
+  - type: textarea
+    id: view
+    attributes:
+      label: ccslot view <name>
+      description: Optional, but it shows exactly how the slot is linked.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before filing
+      options:
+        - label: '`ccslot install` says Claude Code is installed'
+        - label: I am on the latest ccslot (`npx ccslot@latest`)

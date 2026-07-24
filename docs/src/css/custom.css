@@ -1,0 +1,126 @@
+/**
+ * ccslot — editorial serif over terminal mono, warm paper and ink, one coral accent.
+ * No sans-serif anywhere on purpose: the page should read like a well-set technical
+ * note rather than a SaaS landing page.
+ */
+
+:root {
+  --cc-coral: #c04f2f;
+  --cc-paper: #f7f3ed;
+  --cc-paper-2: #efe9e0;
+  --cc-ink: #16130f;
+  --cc-muted: #7c736b;
+  --cc-rule: rgba(22, 19, 15, 0.13);
+  --cc-terminal: #12100e;
+
+  --cc-serif: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --cc-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --ifm-font-family-base: var(--cc-mono);
+  --ifm-font-family-monospace: var(--cc-mono);
+  --ifm-color-primary: #c04f2f;
+  --ifm-color-primary-dark: #ad472a;
+  --ifm-color-primary-darker: #a24326;
+  --ifm-color-primary-darkest: #85371f;
+  --ifm-color-primary-light: #cd5a38;
+  --ifm-color-primary-lighter: #d3613f;
+  --ifm-color-primary-lightest: #dc7859;
+  --ifm-background-color: var(--cc-paper);
+  --ifm-font-color-base: var(--cc-ink);
+  --ifm-font-size-base: 15px;
+  --ifm-line-height-base: 1.7;
+  --ifm-heading-font-family: var(--cc-serif);
+  --ifm-heading-font-weight: 400;
+  --ifm-code-font-size: 90%;
+  --ifm-navbar-height: 62px;
+  --ifm-navbar-background-color: rgba(247, 243, 237, 0.82);
+  --ifm-navbar-shadow: none;
+  --ifm-footer-background-color: #16130f;
+  --ifm-scroll-padding-top: 90px;
+  --docusaurus-highlighted-code-line-bg: rgba(192, 79, 47, 0.14);
+}
+
+[data-theme='dark'] {
+  --cc-coral: #e8734f;
+  --cc-paper: #16130f;
+  --cc-paper-2: #1e1a16;
+  --cc-ink: #f2ece3;
+  --cc-muted: #968c82;
+  --cc-rule: rgba(242, 236, 227, 0.15);
+
+  --ifm-color-primary: #e8734f;
+  --ifm-color-primary-dark: #e35f36;
+  --ifm-color-primary-darker: #d95529;
+  --ifm-color-primary-darkest: #b34622;
+  --ifm-color-primary-light: #ed8768;
+  --ifm-color-primary-lighter: #ef9175;
+  --ifm-color-primary-lightest: #f4b39f;
+  --ifm-background-color: var(--cc-paper);
+  --ifm-font-color-base: var(--cc-ink);
+  --ifm-navbar-background-color: rgba(22, 19, 15, 0.82);
+  --ifm-footer-background-color: #100e0b;
+  --docusaurus-highlighted-code-line-bg: rgba(232, 115, 79, 0.18);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Navbar: a hairline instead of a shadow, blurred paper behind it. */
+.navbar {
+  backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid var(--cc-rule);
+}
+.navbar__title {
+  font-family: var(--cc-mono);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--cc-coral);
+}
+.navbar__link {
+  font-size: 13px;
+  color: var(--cc-muted);
+}
+.navbar__link:hover {
+  color: var(--cc-coral);
+}
+.navbar__logo img {
+  height: 22px;
+}
+
+.footer {
+  border-top: 1px solid var(--cc-rule);
+  font-size: 13px;
+}
+.footer__copyright a {
+  color: #e8734f;
+  text-decoration: none;
+}
+.footer__copyright a:hover {
+  text-decoration: underline;
+}
+
+code {
+  border: none;
+  background: rgba(192, 79, 47, 0.1);
+  color: var(--cc-coral);
+  font-size: 0.9em;
+  padding: 0.12em 0.36em;
+  border-radius: 4px;
+}
+[data-theme='dark'] code {
+  background: rgba(232, 115, 79, 0.14);
+}
