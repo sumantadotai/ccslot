@@ -9,8 +9,10 @@ const config = {
 
   future: { v4: true },
 
-  url: 'https://sumantadotai.github.io',
-  baseUrl: '/ccslot/',
+  url: 'https://ccslot.sumanta.ai',
+  // Custom domain, so the site is served from the root. static/CNAME keeps the
+  // domain across deploys — Pages drops it otherwise.
+  baseUrl: '/',
   organizationName: 'sumantadotai',
   projectName: 'ccslot',
   trailingSlash: false,

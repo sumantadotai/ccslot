@@ -7,7 +7,7 @@
   <a href="https://github.com/sumantadotai/ccslot/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/sumantadotai/ccslot/ci.yml?branch=main&color=D9603F&labelColor=2A2521&label=CI"></a>
   <a href="#license"><img alt="MIT" src="https://img.shields.io/npm/l/ccslot?color=D9603F&labelColor=2A2521"></a>
   <img alt="zero dependencies" src="https://img.shields.io/badge/deps-0-D9603F?labelColor=2A2521">
-  <a href="https://sumantadotai.github.io/ccslot/"><img alt="docs" src="https://img.shields.io/badge/docs-ccslot-D9603F?labelColor=2A2521"></a>
+  <a href="https://ccslot.sumanta.ai/"><img alt="docs" src="https://img.shields.io/badge/docs-ccslot-D9603F?labelColor=2A2521"></a>
 </p>
 
 Claude Code keeps everything in `~/.claude` — login, project history, skills, settings.
